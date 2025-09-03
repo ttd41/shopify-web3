@@ -1,0 +1,363 @@
+# YUX-Shopify-Web3
+
+This project is a minimal MVP that demonstrates how a Shopify store can integrate with Web3 smart contracts.  
+It includes Solidity contracts (deployed with Hardhat) and a Node.js middleware that listens to Shopify webhooks, records orders on-chain, and manages influencer revenue share.
+
+---
+
+## Project Structure
+
+├── app/ # Node.js middleware (webhook handling, payout executor)
+├── contracts/ # Solidity smart contracts
+├── scripts/ # Deployment and helper scripts
+├── hardhat.config.js # Hardhat configuration
+├── package.json # Dependencies and npm scripts
+├── .env.example # Example environment variables
+└── README.md # Project documentation
+
+
+---
+
+## Prerequisites
+
+- Node.js >= 21
+- npm >= 7
+- [Hardhat](https://hardhat.org/)
+- Git
+- A blockchain RPC endpoint (e.g., Alchemy, Infura, or local Hardhat node)
+- A funded wallet private key (for deploying contracts)
+
+---
+
+## Getting Started
+
+### 1. Clone the repository
+```bash
+git clone git@github.com:ttd41/shopify-web3.git
+cd shopify-web3
+```
+
+### 2. Install dependencies
+npm install
+
+### 3. Setup environment variables
+
+Copy .env.example to .env:
+
+`cp .env.example .env`
+
+Fill in the values:
+
+```
+PRIVATE_KEY=your_wallet_private_key
+RPC_URL=https://polygon-mumbai.g.alchemy.com/v2/xxxx
+CONTRACT_ADDRESS=   # will be filled after deployment
+SHOPIFY_WEBHOOK_SECRET=your_shopify_hmac_secret
+TOKEN_ADDRESS=      # optional: ERC20 token for payouts
+MERCHANT_ADDRESS=   # merchant wallet address
+```
+
+### 4. Compile contracts
+`npx hardhat compile`
+
+### 5. Run a local blockchain (for testing)
+`npx hardhat node`
+
+### 6. Deploy contracts
+
+In another terminal:
+
+`npx hardhat run --network localhost scripts/deploy.js`
+
+
+After deployment, copy the printed CONTRACT_ADDRESS into your .env.
+
+### 7. Start the middleware
+`npm start`
+
+
+This will start the Node.js service that:
+
+Listens to Shopify order webhooks, Submits orders to the smart contract, Distributes influencer payouts
+
+## Common Commands
+```
+Command	Description
+npm install	Install dependencies
+npx hardhat compile	Compile Solidity contracts
+npx hardhat test	Run tests
+npx hardhat node	Run a local blockchain
+npx hardhat run scripts/deploy.js	Deploy contracts to selected network
+npm run start	Start the Node.js middleware
+```
+
+## Workflow Example
+
+A customer places an order for a product with an id on Shopify (npm run mock:webhook). Shopify triggers a order/paid webhook → received by the middleware (app/). The middleware verifies the webhook, computes influencer/merchant split, and records the order in the smart contract. (transferred token to payout, in the below example, there will be 2 transactions splitted). The influencer and merchant can later call withdraw() on the contract to receive funds.(The payout contract)
+
+Three Terminals shows this flow
+
+
+### Terminal 1, mock the behavior of placing order for product
+```
+npm run mock:webhook
+Mock webhook sent: { id: 326350969422, currency: 'USD', total_price: '9.57' }
+```
+
+### Terminal 2, mock the behavior of shopify server
+```
+➜  shopify-web3-template npm start
+
+> shopify-web3-template@0.1.0 start
+> node app/index.js
+
+Server listening on :3000
+DEV_MODE=true  RPC=http://127.0.0.1:8545
+[executor] transferred 3200000 tokens to payout
+[executor] submitBatch ok: 0x1ab1c5bc3c6e63150ab2d9c9cd8858d51597f4e01d38a86cae2217435369b7f0
+[executor] transferred 69940000 tokens to payout
+[executor] submitBatch ok: 0xd3c8a2782fd5a4ddce528429a32683ac1fb244de0e965eda10995042dea5b428
+
+```
+
+### Terminal 3, mock the behavior of block chain hosting the contracts
+```
+➜  shopify-web3-template npx hardhat node
+WARNING: You are currently using Node.js v21.7.3, which is not supported by Hardhat. This can lead to unexpected behavior. See https://hardhat.org/nodejs-versions
+
+
+Started HTTP and WebSocket JSON-RPC server at http://127.0.0.1:8545/
+
+Accounts
+========
+
+WARNING: These accounts, and their private keys, are publicly known.
+Any funds sent to them on Mainnet or any other live network WILL BE LOST.
+
+Account #0: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 (10000 ETH)
+Private Key: 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+
+Account #1: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 (10000 ETH)
+Private Key: 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d
+
+Account #2: 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC (10000 ETH)
+Private Key: 0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
+
+Account #3: 0x90F79bf6EB2c4f870365E785982E1f101E93b906 (10000 ETH)
+Private Key: 0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6
+
+Account #4: 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65 (10000 ETH)
+Private Key: 0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a
+
+Account #5: 0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc (10000 ETH)
+Private Key: 0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba
+
+Account #6: 0x976EA74026E726554dB657fA54763abd0C3a0aa9 (10000 ETH)
+Private Key: 0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e
+
+Account #7: 0x14dC79964da2C08b23698B3D3cc7Ca32193d9955 (10000 ETH)
+Private Key: 0x4bbbf85ce3377467afe5d46f804f221813b2bb87f24d81f60f1fcdbf7cbf4356
+
+Account #8: 0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f (10000 ETH)
+Private Key: 0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97
+
+Account #9: 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720 (10000 ETH)
+Private Key: 0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6
+
+Account #10: 0xBcd4042DE499D14e55001CcbB24a551F3b954096 (10000 ETH)
+Private Key: 0xf214f2b2cd398c806f84e317254e0f0b801d0643303237d97a22a48e01628897
+
+Account #11: 0x71bE63f3384f5fb98995898A86B02Fb2426c5788 (10000 ETH)
+Private Key: 0x701b615bbdfb9de65240bc28bd21bbc0d996645a3dd57e7b12bc2bdf6f192c82
+
+Account #12: 0xFABB0ac9d68B0B445fB7357272Ff202C5651694a (10000 ETH)
+Private Key: 0xa267530f49f8280200edf313ee7af6b827f2a8bce2897751d06a843f644967b1
+
+Account #13: 0x1CBd3b2770909D4e10f157cABC84C7264073C9Ec (10000 ETH)
+Private Key: 0x47c99abed3324a2707c28affff1267e45918ec8c3f20b8aa892e8b065d2942dd
+
+Account #14: 0xdF3e18d64BC6A983f673Ab319CCaE4f1a57C7097 (10000 ETH)
+Private Key: 0xc526ee95bf44d8fc405a158bb884d9d1238d99f0612e9f33d006bb0789009aaa
+
+Account #15: 0xcd3B766CCDd6AE721141F452C550Ca635964ce71 (10000 ETH)
+Private Key: 0x8166f546bab6da521a8369cab06c5d2b9e46670292d85c875ee9ec20e84ffb61
+
+Account #16: 0x2546BcD3c84621e976D8185a91A922aE77ECEc30 (10000 ETH)
+Private Key: 0xea6c44ac03bff858b476bba40716402b03e41b8e97e276d1baec7c37d42484a0
+
+Account #17: 0xbDA5747bFD65F08deb54cb465eB87D40e51B197E (10000 ETH)
+Private Key: 0x689af8efa8c651a91ad287602527f3af2fe9f6501a7ac4b061667b5a93e037fd
+
+Account #18: 0xdD2FD4581271e230360230F9337D5c0430Bf44C0 (10000 ETH)
+Private Key: 0xde9be858da4a475276426320d5e9262ecfc3ba460bfac56360bfa6c4c28b4ee0
+
+Account #19: 0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199 (10000 ETH)
+Private Key: 0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e
+
+WARNING: These accounts, and their private keys, are publicly known.
+Any funds sent to them on Mainnet or any other live network WILL BE LOST.
+
+eth_accounts
+hardhat_metadata (20)
+eth_accounts
+hardhat_metadata (20)
+eth_blockNumber
+eth_getBlockByNumber
+eth_feeHistory
+eth_maxPriorityFeePerGas
+eth_sendTransaction
+  Contract deployment: MockUSDC
+  Contract address:    0x5fbdb2315678afecb367f032d93f642f64180aa3
+  Transaction:         0x1ee502be932c60781a8e6546e0b4b596daf99dd74122407455e105a72104a5cc
+  From:                0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
+  Value:               0 ETH
+  Gas used:            616641 of 30000000
+  Block #1:            0xbc7d1249fe7295b908fe543dae6de2256c19d8a12e3833052a4ac2489de5e4d1
+
+eth_getTransactionByHash
+eth_getTransactionReceipt
+eth_blockNumber
+eth_feeHistory
+eth_sendTransaction
+  Contract call:       MockUSDC#mint
+  Transaction:         0x5f2010298e91def8864ff0462b52e4bc92157c9ac961d43610c0e5ed0404703d
+  From:                0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
+  To:                  0x5fbdb2315678afecb367f032d93f642f64180aa3
+  Value:               0 ETH
+  Gas used:            70672 of 30000000
+  Block #2:            0xc6903ce8ff139d565632fc8f71e48836e3373b7ebec92ad0268933a22ec5f01b
+
+eth_getTransactionByHash
+eth_getTransactionReceipt
+eth_blockNumber
+eth_feeHistory
+eth_sendTransaction
+  Contract call:       MockUSDC#mint
+  Transaction:         0xfcb3ca5f001178be987381dd8e05936e57d9796b742da5ef6dfdabddb14dfa17
+  From:                0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
+  To:                  0x5fbdb2315678afecb367f032d93f642f64180aa3
+  Value:               0 ETH
+  Gas used:            53572 of 30000000
+  Block #3:            0x9063dc8d7a6ce789a69b0faeede7820c45c7b33534cc5877e15d8e8e0716fd5b
+
+eth_getTransactionByHash
+eth_getTransactionReceipt
+eth_accounts
+hardhat_metadata (20)
+eth_blockNumber
+eth_feeHistory
+eth_sendTransaction
+  Contract deployment: ShopifyRoyaltyPayout
+  Contract address:    0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9
+  Transaction:         0xffdf018676ae8b24f876ad801ee8007a5206da7eb98f90ce9649cc6baf7f9bad
+  From:                0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
+  Value:               0 ETH
+  Gas used:            808856 of 30000000
+  Block #4:            0xfde2f0b79c44b2939e53cd6b6ad1d5db24b317c8750725db4dbab402fd51a94c
+
+eth_getTransactionByHash
+eth_getTransactionReceipt
+eth_chainId
+eth_call
+  Contract call:       MockUSDC#balanceOf
+  From:                0x70997970c51812dc3a010c7d01b50e0d17dc79c8
+  To:                  0x5fbdb2315678afecb367f032d93f642f64180aa3
+
+eth_getTransactionCount
+eth_chainId
+eth_estimateGas
+eth_chainId (2)
+eth_gasPrice
+eth_getBlockByNumber
+eth_maxPriorityFeePerGas
+eth_chainId
+eth_sendRawTransaction
+  Contract call:       MockUSDC#transfer
+  Transaction:         0xaa34bbad366bc5433b049830bbe32e3ab8ff1b2d2a831474c3b36597fb4c46a4
+  From:                0x70997970c51812dc3a010c7d01b50e0d17dc79c8
+  To:                  0x5fbdb2315678afecb367f032d93f642f64180aa3
+  Value:               0 ETH
+  Gas used:            51550 of 51550
+  Block #5:            0xa0fb1d1644640ffaeab2d2debfc0f066b85c81c2947f479b53a52ca3e7a3545b
+
+eth_blockNumber
+eth_chainId
+eth_getTransactionReceipt
+eth_estimateGas
+eth_chainId (3)
+eth_sendRawTransaction
+  Contract call:       ShopifyRoyaltyPayout#submitBatch
+  Transaction:         0x1ab1c5bc3c6e63150ab2d9c9cd8858d51597f4e01d38a86cae2217435369b7f0
+  From:                0x70997970c51812dc3a010c7d01b50e0d17dc79c8
+  To:                  0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9
+  Value:               0 ETH
+  Gas used:            102529 of 102529
+  Block #6:            0xb6097e4278f9cc3f3c71e1eb3915972ca40d40a803fdf4e57c759d5826660c8d
+
+eth_chainId
+eth_getTransactionReceipt
+eth_call
+  Contract call:       MockUSDC#balanceOf
+  From:                0x70997970c51812dc3a010c7d01b50e0d17dc79c8
+  To:                  0x5fbdb2315678afecb367f032d93f642f64180aa3
+
+eth_chainId
+eth_getTransactionCount
+eth_chainId
+eth_estimateGas
+eth_chainId (2)
+eth_getBlockByNumber
+eth_gasPrice
+eth_maxPriorityFeePerGas
+eth_sendRawTransaction
+  Contract call:       MockUSDC#transfer
+  Transaction:         0xa9d99bcdd899e04f5b4e7104ac4459b44dc233eb60239b54d51b096ebcc2ff56
+  From:                0x70997970c51812dc3a010c7d01b50e0d17dc79c8
+  To:                  0x5fbdb2315678afecb367f032d93f642f64180aa3
+  Value:               0 ETH
+  Gas used:            34474 of 34474
+  Block #7:            0xd4a55e993d17e8d3037fe92702d0abacfb0762d0ee2f53e69f76be1bbcf87f87
+
+eth_chainId
+eth_blockNumber
+eth_chainId
+eth_getTransactionReceipt
+eth_estimateGas
+eth_chainId (2)
+eth_sendRawTransaction
+  Contract call:       ShopifyRoyaltyPayout#submitBatch
+  Transaction:         0xd3c8a2782fd5a4ddce528429a32683ac1fb244de0e965eda10995042dea5b428
+  From:                0x70997970c51812dc3a010c7d01b50e0d17dc79c8
+  To:                  0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9
+  Value:               0 ETH
+  Gas used:            68389 of 68389
+  Block #8:            0x9c30ef1c217ca00a7d918da6d5e8fc1f720cea70d24d20725bb7cde98f1a738e
+
+eth_chainId (2)
+eth_getTransactionReceipt
+```
+
+## Roadmap / Next Steps
+
+Add full unit tests
+
+- Support stablecoins (e.g., USDC) for payments
+- Optimize batch payouts (reduce gas costs)
+- Implement refund handling
+- Add a simple dashboard for merchants/influencers
+
+## License
+
+MIT License. See LICENSE file for details.
+
+## Contact
+
+For questions or contributions, open an Issue or PR on GitHub.
+
+
+---
+
+✅ This `README.md` is ready for direct copy-paste into your repo root.  
+
+Do you also want me to include a **section with example curl commands** for simulating Shopify webhook calls locally? That way you can test without an actual Shopify store connected yet.
+
