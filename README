@@ -339,9 +339,9 @@ eth_getTransactionReceipt
 
 ## Roadmap / Next Steps
 
-Add full unit tests
-
+- Add full unit tests
 - Support stablecoins (e.g., USDC) for payments
+- Chose the right block chain
 - Optimize batch payouts (reduce gas costs)
 - Implement refund handling
 - Add a simple dashboard for merchants/influencers
