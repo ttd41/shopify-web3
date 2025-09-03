@@ -1,0 +1,26 @@
+{
+  "name": "shopify-web3-template",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MVP: Shopify webhooks → batch API → executor → payout smart contract",
+  "scripts": {
+    "compile": "hardhat compile",
+    "node": "hardhat node",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "start": "node app/index.js",
+    "mock:webhook": "node app/tools/mockWebhook.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.4",
+    "better-sqlite3": "^9.6.0",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.13.2",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@ethersproject/experimental": "^5.8.0",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.0.2",
+    "hardhat": "^2.22.12"
+  }
+}
