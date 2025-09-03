@@ -7,6 +7,7 @@ It includes Solidity contracts (deployed with Hardhat) and a Node.js middleware 
 
 ## Project Structure
 
+```
 ├── app/ # Node.js middleware (webhook handling, payout executor)
 ├── contracts/ # Solidity smart contracts
 ├── scripts/ # Deployment and helper scripts
@@ -14,14 +15,14 @@ It includes Solidity contracts (deployed with Hardhat) and a Node.js middleware 
 ├── package.json # Dependencies and npm scripts
 ├── .env.example # Example environment variables
 └── README.md # Project documentation
-
+```
 
 ---
 
 ## Prerequisites
 
 - Node.js >= 21
-- npm >= 7
+- npm >= 10
 - [Hardhat](https://hardhat.org/)
 - Git
 - A blockchain RPC endpoint (e.g., Alchemy, Infura, or local Hardhat node)
@@ -38,7 +39,8 @@ cd shopify-web3
 ```
 
 ### 2. Install dependencies
-npm install
+
+`npm install`
 
 ### 3. Setup environment variables
 
@@ -93,18 +95,21 @@ npm run start	Start the Node.js middleware
 
 ## Workflow Example
 
-A customer places an order for a product with an id on Shopify (npm run mock:webhook). Shopify triggers a order/paid webhook → received by the middleware (app/). The middleware verifies the webhook, computes influencer/merchant split, and records the order in the smart contract. (transferred token to payout, in the below example, there will be 2 transactions splitted). The influencer and merchant can later call withdraw() on the contract to receive funds.(The payout contract)
+- A customer places an order for a product with an id on Shopify (npm run mock:webhook). 
+- Shopify triggers a order/paid webhook → received by the middleware (app/). 
+- The middleware verifies the webhook, computes influencer/merchant split, and records the order in the smart contract. (transferred token to payout, in the below example, there will be 2 transactions splitted).
+- The influencer and merchant can later call withdraw() on the contract to receive funds.(The payout contract)
 
 Three Terminals shows this flow
 
 
-### Terminal 1, mock the behavior of placing order for product
+### Terminal 1: mock the behavior of placing order for product
 ```
 npm run mock:webhook
 Mock webhook sent: { id: 326350969422, currency: 'USD', total_price: '9.57' }
 ```
 
-### Terminal 2, mock the behavior of shopify server
+### Terminal 2: mock the behavior of shopify server
 ```
 ➜  shopify-web3-template npm start
 
@@ -120,7 +125,7 @@ DEV_MODE=true  RPC=http://127.0.0.1:8545
 
 ```
 
-### Terminal 3, mock the behavior of block chain hosting the contracts
+### Terminal 3: mock the behavior of block chain hosting the contracts
 ```
 ➜  shopify-web3-template npx hardhat node
 WARNING: You are currently using Node.js v21.7.3, which is not supported by Hardhat. This can lead to unexpected behavior. See https://hardhat.org/nodejs-versions
@@ -353,11 +358,3 @@ MIT License. See LICENSE file for details.
 ## Contact
 
 For questions or contributions, open an Issue or PR on GitHub.
-
-
----
-
-✅ This `README.md` is ready for direct copy-paste into your repo root.  
-
-Do you also want me to include a **section with example curl commands** for simulating Shopify webhook calls locally? That way you can test without an actual Shopify store connected yet.
-
